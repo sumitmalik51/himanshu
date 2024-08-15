@@ -39,3 +39,15 @@ resource "azurerm_windows_web_app" "app" {
     }
   }
 }
+
+
+resource "azurerm_app_service_source_control" "example" {
+  for_each = var.simple_auth_enabled && length(var.appService) > 0 ? var.appService : {}
+
+  app_service_name    = each.value.name
+  resource_group_name = azurerm_resource_group.example.name
+
+  repo_url           = each.value.git_repo_url
+  branch             = each.value.git_branch
+  manual_integration = true
+}
