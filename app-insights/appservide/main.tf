@@ -11,13 +11,24 @@ data "azurerm_service_plan" "dataServicePlan"{
 }
 
 
-resource "azurerm_windows_web_app" "app" {
+resource "azurerm_app_service" "app" {
   for_each = var.appService
   name                = each.value["web_appName"]
   resource_group_name = data.azurerm_resource_group.rg.name
   location            = data.azurerm_service_plan.dataServicePlan.location
-  service_plan_id     = data.azurerm_service_plan.dataServicePlan.id
-
+  app_service_plan_id     = data.azurerm_service_plan.dataServicePlan.id
+client_cert_enabled          = true
+ logs {
+               detailed_error_messages_enabled = true
+            failed_request_tracing_enabled = true
+ }
+ storage_account {
+                name        = "test_name"
+                type        = "AzureFiles"
+                share_name  = "test_share"
+                account_name = "your_account_name"
+                access_key  = "your_access_key"
+                }
   app_settings = {
 
 
@@ -27,7 +38,8 @@ resource "azurerm_windows_web_app" "app" {
     for_each = each.value["site_config"] != null ? each.value["site_config"] : {}
     content {
       always_on = site_config.value["always_on"]
-      ftps_state = site_config.value["ftps_state"]
+      health_check_path = "/health" 
+      ftps_state = "FtpsOnly"
       http2_enabled = site_config.value["http2_enabled"]
      dynamic "application_stack"{
       for_each = site_config.value["application_stack"] != null ? site_config.value["application_stack"] : {}
